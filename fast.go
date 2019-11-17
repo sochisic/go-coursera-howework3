@@ -15,18 +15,27 @@ func FastSearch(out io.Writer) {
 	if err != nil {
 		panic(err)
 	}
+	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
+	reader := bufio.NewReader(file)
 
 	r := strings.NewReplacer("@", " [at] ")
 	seenBrowsers := []string{}
 	uniqueBrowsers := 0
 
 	users := make([]user.User, 0)
-	for scanner.Scan() {
-		// fmt.Printf("%v %v\n", err, line)
+	for {
+		line, err := reader.ReadBytes('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				fmt.Println(err)
+				return
+			}
+		}
 		u := user.User{}
-		err := u.UnmarshalJSON([]byte(scanner.Text()))
+		err = u.UnmarshalJSON(line)
 		if err != nil {
 			panic(err)
 		}
